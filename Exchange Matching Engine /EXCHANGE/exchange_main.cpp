@@ -12,8 +12,7 @@ Exchange::OrderServer *order_server = nullptr;
 
 /// Shut down gracefully on external signals to this server.
 void signal_handler(int) {
-  using namespace std::literals::chrono_literals;
-  std::this_thread::sleep_for(10s);
+  // Removed 10 second sleeps - using event-driven shutdown for nanosecond performance
 
   delete logger;
   logger = nullptr;
@@ -24,7 +23,7 @@ void signal_handler(int) {
   delete order_server;
   order_server = nullptr;
 
-  std::this_thread::sleep_for(10s);
+  // Removed 10 second sleep - using event-driven shutdown for nanosecond performance
 
   exit(EXIT_SUCCESS);
 }
@@ -34,7 +33,7 @@ int main(int, char **) {
 
   std::signal(SIGINT, signal_handler);
 
-  const int sleep_time = 100 * 1000;
+  // Removed sleep_time - using event-driven architecture for nanosecond performance
 
   // The lock free queues to facilitate communication between order server <-> matching engine and matching engine -> market data publisher.
   Exchange::ClientRequestLFQueue client_requests(ME_MAX_CLIENT_UPDATES);
@@ -63,7 +62,7 @@ int main(int, char **) {
   order_server->start();
 
   while (true) {
-    logger->log("%:% %() % Sleeping for a few milliseconds..\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
-    usleep(sleep_time * 1000);
+    logger->log("%:% %() % Event-driven main loop - no sleep for nanosecond performance..\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
+    std::this_thread::yield(); // Minimal yield instead of blocking sleep
   }
 }

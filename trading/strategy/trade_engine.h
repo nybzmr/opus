@@ -46,7 +46,7 @@ namespace Trading {
                     Common::getCurrentTimeStr(&time_str_), incoming_ogw_responses_->size(), incoming_md_updates_->size());
 
         using namespace std::literals::chrono_literals;
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::yield(); // Minimal yield instead of blocking sleep
       }
 
       logger_.log("%:% %() % POSITIONS\n%\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),

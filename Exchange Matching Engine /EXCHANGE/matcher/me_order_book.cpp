@@ -62,27 +62,60 @@ namespace Exchange {
     auto leaves_qty = qty;
 
     if (side == Side::BUY) {
-      while (leaves_qty && asks_by_price_) {
+      // BUY order matches against ASK orders (sell orders)
+      while (leaves_qty > 0 && asks_by_price_) {
         const auto ask_itr = asks_by_price_->first_me_order_;
-        if (LIKELY(price < ask_itr->price_)) {
+        if (UNLIKELY(!ask_itr)) {
+          logger_->log("ERROR: No first order in ask price level\n");
           break;
+        }
+        
+        // BUY can only match if our price >= ask price
+        if (price < ask_itr->price_) {
+          break; // No more matches possible
         }
 
         START_MEASURE(Exchange_MEOrderBook_match);
         match(ticker_id, client_id, side, client_order_id, new_market_order_id, ask_itr, &leaves_qty);
         END_MEASURE(Exchange_MEOrderBook_match, (*logger_));
+        
+        // If this price level is empty, move to next level
+        if (!asks_by_price_->first_me_order_) {
+          auto next_ask = asks_by_price_->next_entry_;
+          if (next_ask == asks_by_price_) {
+            asks_by_price_ = nullptr; // No more ask levels
+          } else {
+            asks_by_price_ = next_ask;
+          }
+        }
       }
-    }
-    if (side == Side::SELL) {
-      while (leaves_qty && bids_by_price_) {
+    } else if (side == Side::SELL) {
+      // SELL order matches against BID orders (buy orders)
+      while (leaves_qty > 0 && bids_by_price_) {
         const auto bid_itr = bids_by_price_->first_me_order_;
-        if (LIKELY(price > bid_itr->price_)) {
+        if (UNLIKELY(!bid_itr)) {
+          logger_->log("ERROR: No first order in bid price level\n");
           break;
+        }
+        
+        // SELL can only match if our price <= bid price
+        if (price > bid_itr->price_) {
+          break; // No more matches possible
         }
 
         START_MEASURE(Exchange_MEOrderBook_match);
         match(ticker_id, client_id, side, client_order_id, new_market_order_id, bid_itr, &leaves_qty);
         END_MEASURE(Exchange_MEOrderBook_match, (*logger_));
+        
+        // If this price level is empty, move to next level
+        if (!bids_by_price_->first_me_order_) {
+          auto next_bid = bids_by_price_->next_entry_;
+          if (next_bid == bids_by_price_) {
+            bids_by_price_ = nullptr; // No more bid levels
+          } else {
+            bids_by_price_ = next_bid;
+          }
+        }
       }
     }
 

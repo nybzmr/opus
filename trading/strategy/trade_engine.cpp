@@ -45,7 +45,7 @@ namespace Trading {
     run_ = false;
 
     using namespace std::literals::chrono_literals;
-    std::this_thread::sleep_for(1s);
+    std::this_thread::yield(); // Minimal yield instead of blocking sleep
 
     delete mm_algo_; mm_algo_ = nullptr;
     delete taker_algo_; taker_algo_ = nullptr;

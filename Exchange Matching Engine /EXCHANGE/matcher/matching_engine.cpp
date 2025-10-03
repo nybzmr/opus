@@ -14,7 +14,7 @@ namespace Exchange {
     stop();
 
     using namespace std::literals::chrono_literals;
-    std::this_thread::sleep_for(1s);
+    std::this_thread::yield(); // Minimal yield instead of blocking sleep
 
     incoming_requests_ = nullptr;
     outgoing_ogw_responses_ = nullptr;

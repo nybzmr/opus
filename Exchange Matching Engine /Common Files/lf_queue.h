@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <atomic>
+#include <thread>
 
 #include "macros.h"
 
@@ -12,29 +13,52 @@ namespace Common {
   public:
     explicit LFQueue(std::size_t num_elems) :
         store_(num_elems, T()) /* pre-allocation of vector storage. */ {
+      // Ensure size is power of 2 for efficient modulo operations
+      ASSERT((num_elems & (num_elems - 1)) == 0, "LFQueue size must be power of 2");
     }
 
-    auto getNextToWriteTo() noexcept {
-      return &store_[next_write_index_];
+    auto getNextToWriteTo() noexcept -> T* {
+      auto current_write = write_pos_.load(std::memory_order_relaxed);
+      auto next_write = (current_write + 1) & (store_.size() - 1); // Fast modulo for power of 2
+      
+      // Check if queue is full
+      if (next_write == read_pos_.load(std::memory_order_acquire)) {
+        return nullptr; // Queue full
+      }
+      
+      return &store_[current_write];
     }
 
-    auto updateWriteIndex() noexcept {
-      next_write_index_ = (next_write_index_ + 1) % store_.size();
-      num_elements_++;
+    auto updateWriteIndex() noexcept -> bool {
+      write_pos_.fetch_add(1, std::memory_order_release);
+      return true;
     }
 
     auto getNextToRead() const noexcept -> const T * {
-      return (size() ? &store_[next_read_index_] : nullptr);
+      auto current_read = read_pos_.load(std::memory_order_relaxed);
+      
+      if (current_read == write_pos_.load(std::memory_order_acquire)) {
+        return nullptr; // Queue empty
+      }
+      
+      return &store_[current_read];
     }
 
-    auto updateReadIndex() noexcept {
-      next_read_index_ = (next_read_index_ + 1) % store_.size(); // wrap around at the end of container size.
-      ASSERT(num_elements_ != 0, "Read an invalid element in:" + std::to_string(pthread_self()));
-      num_elements_--;
+    auto updateReadIndex() noexcept -> bool {
+      auto current_read = read_pos_.load(std::memory_order_relaxed);
+      
+      if (current_read == write_pos_.load(std::memory_order_acquire)) {
+        return false; // Queue empty
+      }
+      
+      read_pos_.fetch_add(1, std::memory_order_release);
+      return true;
     }
 
-    auto size() const noexcept {
-      return num_elements_.load();
+    auto size() const noexcept -> size_t {
+      auto write_pos = write_pos_.load(std::memory_order_relaxed);
+      auto read_pos = read_pos_.load(std::memory_order_relaxed);
+      return (write_pos - read_pos) & (store_.size() - 1);
     }
 
     /// Deleted default, copy & move constructors and assignment-operators.
@@ -52,10 +76,8 @@ namespace Common {
     /// Underlying container of data accessed in FIFO order.
     std::vector<T> store_;
 
-    /// Atomic trackers for next index to write new data to and read new data from.
-    std::atomic<size_t> next_write_index_ = {0};
-    std::atomic<size_t> next_read_index_ = {0};
-
-    std::atomic<size_t> num_elements_ = {0};
+    /// Atomic trackers for write and read positions with proper memory alignment
+    alignas(64) std::atomic<size_t> write_pos_ = {0};
+    alignas(64) std::atomic<size_t> read_pos_ = {0};
   };
 }

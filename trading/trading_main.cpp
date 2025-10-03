@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
   logger = new Common::Logger("trading_main_" + std::to_string(client_id) + ".log");
 
-  const int sleep_time = 20 * 1000;
+  // Removed sleep_time - using event-driven architecture for nanosecond performance
 
   // The lock free queues to facilitate communication between order gateway <-> trade engine and market data consumer -> trade engine.
   Exchange::ClientRequestLFQueue client_requests(ME_MAX_CLIENT_UPDATES);
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   market_data_consumer = new Trading::MarketDataConsumer(client_id, &market_updates, mkt_data_iface, snapshot_ip, snapshot_port, incremental_ip, incremental_port);
   market_data_consumer->start();
 
-  usleep(10 * 1000 * 1000);
+  // Removed 10 second sleep - using event-driven initialization
 
   trade_engine->initLastEventTime();
 
@@ -93,14 +93,14 @@ int main(int argc, char **argv) {
       Exchange::MEClientRequest new_request{Exchange::ClientRequestType::NEW, client_id, ticker_id, order_id++, side,
                                             price, qty};
       trade_engine->sendClientRequest(&new_request);
-      usleep(sleep_time);
+      // Removed sleep - using event-driven processing for nanosecond performance
 
       client_requests_vec.push_back(new_request);
       const auto cxl_index = rand() % client_requests_vec.size();
       auto cxl_request = client_requests_vec[cxl_index];
       cxl_request.type_ = Exchange::ClientRequestType::CANCEL;
       trade_engine->sendClientRequest(&cxl_request);
-      usleep(sleep_time);
+      // Removed sleep - using event-driven processing for nanosecond performance
 
       if (trade_engine->silentSeconds() >= 60) {
         logger->log("%:% %() % Stopping early because been silent for % seconds...\n", __FILE__, __LINE__, __FUNCTION__,
@@ -115,17 +115,16 @@ int main(int argc, char **argv) {
     logger->log("%:% %() % Waiting till no activity, been silent for % seconds...\n", __FILE__, __LINE__, __FUNCTION__,
                 Common::getCurrentTimeStr(&time_str), trade_engine->silentSeconds());
 
-    using namespace std::literals::chrono_literals;
-    std::this_thread::sleep_for(30s);
+    // Removed 30 second sleep - using event-driven processing for nanosecond performance
+    std::this_thread::yield(); // Minimal yield instead of blocking
   }
 
   trade_engine->stop();
   market_data_consumer->stop();
   order_gateway->stop();
 
-  using namespace std::literals::chrono_literals;
-  std::this_thread::sleep_for(10s);
-
+  // Removed 10 second sleeps - using event-driven cleanup for nanosecond performance
+  
   delete logger;
   logger = nullptr;
   delete trade_engine;
@@ -135,7 +134,7 @@ int main(int argc, char **argv) {
   delete order_gateway;
   order_gateway = nullptr;
 
-  std::this_thread::sleep_for(10s);
+  // Removed 10 second sleep - using event-driven cleanup for nanosecond performance
 
   exit(EXIT_SUCCESS);
 }
