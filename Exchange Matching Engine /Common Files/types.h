@@ -13,17 +13,20 @@ namespace Common {
   constexpr size_t ME_MAX_TICKERS = 8;
 
   /// Maximum size of lock free queues used to transfer client requests, client responses and market updates between components.
-  constexpr size_t ME_MAX_CLIENT_UPDATES = 256 * 1024;
-  constexpr size_t ME_MAX_MARKET_UPDATES = 256 * 1024;
+  /// Must be power of 2 for efficient modulo operations in lock-free queues
+  constexpr size_t ME_MAX_CLIENT_UPDATES = 262144; // 2^18 = 256K (power of 2)
+  constexpr size_t ME_MAX_MARKET_UPDATES = 262144; // 2^18 = 256K (power of 2)
 
   /// Maximum trading clients.
   constexpr size_t ME_MAX_NUM_CLIENTS = 256;
 
   /// Maximum number of orders per trading client.
-  constexpr size_t ME_MAX_ORDER_IDS = 1024 * 1024;
+  /// Must be power of 2 for efficient modulo operations in memory pools
+  constexpr size_t ME_MAX_ORDER_IDS = 1048576; // 2^20 = 1M (power of 2)
 
   /// Maximum price level depth in the order books.
-  constexpr size_t ME_MAX_PRICE_LEVELS = 256;
+  /// Must be power of 2 for efficient modulo operations
+  constexpr size_t ME_MAX_PRICE_LEVELS = 256; // 2^8 = 256 (already power of 2)
 
   typedef uint64_t OrderId;
   constexpr auto OrderId_INVALID = std::numeric_limits<OrderId>::max();

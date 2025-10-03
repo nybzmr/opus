@@ -3,6 +3,8 @@
 #include "matcher/matching_engine.h"
 #include "market_data/market_data_publisher.h"
 #include "order_server/order_server.h"
+#include "common/performance_dashboard.h"
+#include "common/latency_tracker.h"
 
 /// Main components, made global to be accessible from the signal handler.
 Common::Logger *logger = nullptr;
@@ -33,7 +35,11 @@ int main(int, char **) {
 
   std::signal(SIGINT, signal_handler);
 
-  // Removed sleep_time - using event-driven architecture for nanosecond performance
+  // Initialize nanosecond performance monitoring
+  Common::NanosecondTimer::calibrate();
+  Common::g_performance_dashboard.start();
+  
+  logger->log("%:% %() % Starting NANOSECOND HFT Engine with performance monitoring...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
 
   // The lock free queues to facilitate communication between order server <-> matching engine and matching engine -> market data publisher.
   Exchange::ClientRequestLFQueue client_requests(ME_MAX_CLIENT_UPDATES);
@@ -42,7 +48,7 @@ int main(int, char **) {
 
   std::string time_str;
 
-  logger->log("%:% %() % Starting Matching Engine...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
+  logger->log("%:% %() % Starting Nanosecond-Precision Matching Engine...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   matching_engine = new Exchange::MatchingEngine(&client_requests, &client_responses, &market_updates);
   matching_engine->start();
 
@@ -61,8 +67,11 @@ int main(int, char **) {
   order_server = new Exchange::OrderServer(&client_requests, &client_responses, order_gw_iface, order_gw_port);
   order_server->start();
 
+  logger->log("%:% %() % NANOSECOND HFT Engine started successfully! Performance monitoring active.\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
+  
   while (true) {
-    logger->log("%:% %() % Event-driven main loop - no sleep for nanosecond performance..\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
+    // Event-driven main loop - no sleep for nanosecond performance
+    // Performance dashboard runs in separate thread and reports metrics
     std::this_thread::yield(); // Minimal yield instead of blocking sleep
   }
 }

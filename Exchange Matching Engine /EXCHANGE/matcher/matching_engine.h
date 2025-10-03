@@ -3,6 +3,8 @@
 #include "common/thread_utils.h"
 #include "common/lf_queue.h"
 #include "common/macros.h"
+#include "common/nanosecond_timer.h"
+#include "common/latency_tracker.h"
 
 #include "order_server/client_request.h"
 #include "order_server/client_response.h"
@@ -26,20 +28,22 @@ namespace Exchange {
 
     /// Called to process a client request read from the lock free queue sent by the order server.
     auto processClientRequest(const MEClientRequest *client_request) noexcept {
+      MEASURE_LATENCY("processClientRequest");
+      
       auto order_book = ticker_order_book_[client_request->ticker_id_];
       switch (client_request->type_) {
         case ClientRequestType::NEW: {
-          START_MEASURE(Exchange_MEOrderBook_add);
+          START_LATENCY_MEASURE(Exchange_MEOrderBook_add);
           order_book->add(client_request->client_id_, client_request->order_id_, client_request->ticker_id_,
                            client_request->side_, client_request->price_, client_request->qty_);
-          END_MEASURE(Exchange_MEOrderBook_add, logger_);
+          END_LATENCY_MEASURE(Exchange_MEOrderBook_add, logger_);
         }
           break;
 
         case ClientRequestType::CANCEL: {
-          START_MEASURE(Exchange_MEOrderBook_cancel);
+          START_LATENCY_MEASURE(Exchange_MEOrderBook_cancel);
           order_book->cancel(client_request->client_id_, client_request->order_id_, client_request->ticker_id_);
-          END_MEASURE(Exchange_MEOrderBook_cancel, logger_);
+          END_LATENCY_MEASURE(Exchange_MEOrderBook_cancel, logger_);
         }
           break;
 
@@ -70,18 +74,26 @@ namespace Exchange {
 
     /// Main loop for this thread - processes incoming client requests which in turn generates client responses and market updates.
     auto run() noexcept {
-      logger_.log("%:% %() %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_));
+      logger_.log("%:% %() % Starting nanosecond-precision matching engine\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_));
+      
+      // Initialize nanosecond timer
+      Common::NanosecondTimer::calibrate();
+      
       while (run_) {
         const auto me_client_request = incoming_requests_->getNextToRead();
         if (LIKELY(me_client_request)) {
-          TTT_MEASURE(T3_MatchingEngine_LFQueue_read, logger_);
+          START_LATENCY_MEASURE(LFQueue_read);
+          END_LATENCY_MEASURE(LFQueue_read, logger_);
 
           logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
                       me_client_request->toString());
-          START_MEASURE(Exchange_MatchingEngine_processClientRequest);
+          START_LATENCY_MEASURE(Exchange_MatchingEngine_processClientRequest);
           processClientRequest(me_client_request);
-          END_MEASURE(Exchange_MatchingEngine_processClientRequest, logger_);
+          END_LATENCY_MEASURE(Exchange_MatchingEngine_processClientRequest, logger_);
           incoming_requests_->updateReadIndex();
+        } else {
+          // No work available, yield to avoid busy waiting
+          std::this_thread::yield();
         }
       }
     }
