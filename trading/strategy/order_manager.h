@@ -1,9 +1,9 @@
 #pragma once
 
-#include "common/macros.h"
-#include "common/logging.h"
+#include "macros.h"
+#include "logging.h"
 
-#include "exchange/order_server/client_response.h"
+#include "order_server/client_response.h"
 
 #include "om_order.h"
 #include "risk_manager.h"

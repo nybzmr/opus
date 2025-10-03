@@ -1,10 +1,12 @@
 #include <csignal>
+#include <vector>
 
-#include "strategy/trade_engine.h"
-#include "order_gw/order_gateway.h"
-#include "market_data/market_data_consumer.h"
-
-#include "common/logging.h"
+#include "types.h"
+#include "time_utils.h"
+#include "trade_engine.h"
+#include "order_gateway.h"
+#include "market_data_consumer.h"
+#include "logging.h"
 
 /// Main components.
 Common::Logger *logger = nullptr;
@@ -76,55 +78,58 @@ int main(int argc, char **argv) {
 
   trade_engine->initLastEventTime();
 
-  // For the random trading algorithm, we simply implement it here instead of creating a new trading algorithm which is another possibility.
-  // Generate random orders with random attributes and randomly cancel some of them.
   if (algo_type == AlgoType::RANDOM) {
     Common::OrderId order_id = client_id * 1000;
     std::vector<Exchange::MEClientRequest> client_requests_vec;
     std::array<Price, ME_MAX_TICKERS> ticker_base_price;
     for (size_t i = 0; i < ME_MAX_TICKERS; ++i)
       ticker_base_price[i] = (rand() % 100) + 100;
-    for (size_t i = 0; i < 10000; ++i) {
+    const size_t ORDERS_PER_CLIENT = 100000000;
+    
+    auto start_time = Common::getCurrentNanos();
+    
+    for (size_t i = 0; i < ORDERS_PER_CLIENT; ++i) {
       const Common::TickerId ticker_id = rand() % Common::ME_MAX_TICKERS;
       const Price price = ticker_base_price[ticker_id] + (rand() % 10) + 1;
       const Qty qty = 1 + (rand() % 100) + 1;
       const Side side = (rand() % 2 ? Common::Side::BUY : Common::Side::SELL);
 
+      auto order_start = Common::getCurrentNanos();
+      
       Exchange::MEClientRequest new_request{Exchange::ClientRequestType::NEW, client_id, ticker_id, order_id++, side,
                                             price, qty};
       trade_engine->sendClientRequest(&new_request);
-      // Removed sleep - using event-driven processing for nanosecond performance
+      
+      auto order_latency = Common::getCurrentNanos() - order_start;
 
       client_requests_vec.push_back(new_request);
       const auto cxl_index = rand() % client_requests_vec.size();
       auto cxl_request = client_requests_vec[cxl_index];
       cxl_request.type_ = Exchange::ClientRequestType::CANCEL;
       trade_engine->sendClientRequest(&cxl_request);
-      // Removed sleep - using event-driven processing for nanosecond performance
-
-      if (trade_engine->silentSeconds() >= 60) {
-        logger->log("%:% %() % Stopping early because been silent for % seconds...\n", __FILE__, __LINE__, __FUNCTION__,
-                    Common::getCurrentTimeStr(&time_str), trade_engine->silentSeconds());
-
-        break;
+      
+      if (i > 0 && i % 10000000 == 0) {
+        logger->log("%:% %() % Client % processed % orders...\n", __FILE__, __LINE__, __FUNCTION__,
+                    Common::getCurrentTimeStr(&time_str), client_id, i);
       }
     }
+    
+    auto end_time = Common::getCurrentNanos();
+    auto total_time_ns = end_time - start_time;
+    auto avg_latency_ns = total_time_ns / (ORDERS_PER_CLIENT * 2);
+    
+    logger->log("%:% %() % Client % COMPLETED: % orders in % ns (avg latency: % ns)\n", 
+                __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str),
+                client_id, ORDERS_PER_CLIENT * 2, total_time_ns, avg_latency_ns);
   }
 
-  while (trade_engine->silentSeconds() < 60) {
-    logger->log("%:% %() % Waiting till no activity, been silent for % seconds...\n", __FILE__, __LINE__, __FUNCTION__,
-                Common::getCurrentTimeStr(&time_str), trade_engine->silentSeconds());
-
-    // Removed 30 second sleep - using event-driven processing for nanosecond performance
-    std::this_thread::yield(); // Minimal yield instead of blocking
-  }
+  logger->log("%:% %() % All orders processed, shutting down...\n", __FILE__, __LINE__, __FUNCTION__,
+              Common::getCurrentTimeStr(&time_str));
 
   trade_engine->stop();
   market_data_consumer->stop();
   order_gateway->stop();
 
-  // Removed 10 second sleeps - using event-driven cleanup for nanosecond performance
-  
   delete logger;
   logger = nullptr;
   delete trade_engine;
@@ -133,8 +138,6 @@ int main(int argc, char **argv) {
   market_data_consumer = nullptr;
   delete order_gateway;
   order_gateway = nullptr;
-
-  // Removed 10 second sleep - using event-driven cleanup for nanosecond performance
 
   exit(EXIT_SUCCESS);
 }

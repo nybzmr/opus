@@ -2,6 +2,13 @@
 
 #include "tcp_socket.h"
 
+#ifdef __APPLE__
+#include <sys/event.h>
+#define MAX_EVENTS 1024
+#else
+#include <sys/epoll.h>
+#endif
+
 namespace Common {
   struct TCPServer {
     explicit TCPServer(Logger &logger)
@@ -18,15 +25,19 @@ namespace Common {
     auto sendAndRecv() noexcept -> void;
 
   private:
-    /// Add and remove socket file descriptors to and from the EPOLL list.
+    /// Add and remove socket file descriptors to and from the EPOLL/KQUEUE list.
     auto addToEpollList(TCPSocket *socket);
 
   public:
     /// Socket on which this server is listening for new connections on.
+#ifdef __APPLE__
+    int kqueue_fd_ = -1;
+    struct kevent events_[MAX_EVENTS];
+#else
     int epoll_fd_ = -1;
-    TCPSocket listener_socket_;
-
     epoll_event events_[1024];
+#endif
+    TCPSocket listener_socket_;
 
     /// Collection of all sockets, sockets for incoming data, sockets for outgoing data and dead connections.
     std::vector<TCPSocket *> receive_sockets_, send_sockets_;

@@ -3,9 +3,8 @@
 namespace Common {
   /// Read from the TSC register and return a uint64_t value to represent elapsed CPU clock cycles.
   inline auto rdtsc() noexcept {
-    unsigned int lo, hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((uint64_t) hi << 32) | lo;
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::high_resolution_clock::now().time_since_epoch()).count();
   }
 }
 

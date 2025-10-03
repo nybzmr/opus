@@ -1,10 +1,10 @@
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/logging.h"
+#include "macros.h"
+#include "types.h"
+#include "logging.h"
 
-#include "exchange/order_server/client_response.h"
+#include "order_server/client_response.h"
 
 #include "market_order_book.h"
 

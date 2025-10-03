@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common/types.h"
-#include "common/mem_pool.h"
-#include "common/logging.h"
+#include "types.h"
+#include "mem_pool.h"
+#include "logging.h"
 #include "order_server/client_response.h"
 #include "market_data/market_update.h"
 
@@ -166,10 +166,10 @@ namespace Exchange {
       orders_at_price_pool_.deallocate(orders_at_price);
     }
 
-    auto getNextPriority(Price price) noexcept {
+    auto getNextPriority(Price price) noexcept -> Priority {
       const auto orders_at_price = getOrdersAtPrice(price);
       if (!orders_at_price)
-        return 1lu;
+        return 1;
 
       return orders_at_price->first_me_order_->prev_order_->priority_ + 1;
     }

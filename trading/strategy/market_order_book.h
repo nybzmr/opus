@@ -1,11 +1,11 @@
 #pragma once
 
-#include "common/types.h"
-#include "common/mem_pool.h"
-#include "common/logging.h"
+#include "types.h"
+#include "mem_pool.h"
+#include "logging.h"
 
 #include "market_order.h"
-#include "exchange/market_data/market_update.h"
+#include "market_data/market_update.h"
 
 namespace Trading {
   class TradeEngine;

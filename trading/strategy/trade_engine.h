@@ -2,15 +2,15 @@
 
 #include <functional>
 
-#include "common/thread_utils.h"
-#include "common/time_utils.h"
-#include "common/lf_queue.h"
-#include "common/macros.h"
-#include "common/logging.h"
+#include "thread_utils.h"
+#include "time_utils.h"
+#include "lf_queue.h"
+#include "macros.h"
+#include "logging.h"
 
-#include "exchange/order_server/client_request.h"
-#include "exchange/order_server/client_response.h"
-#include "exchange/market_data/market_update.h"
+#include "client_request.h"
+#include "client_response.h"
+#include "market_update.h"
 
 #include "market_order_book.h"
 

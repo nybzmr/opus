@@ -1,10 +1,10 @@
 #include <csignal>
 
-#include "matcher/matching_engine.h"
-#include "market_data/market_data_publisher.h"
-#include "order_server/order_server.h"
-#include "common/performance_dashboard.h"
-#include "common/latency_tracker.h"
+#include "matching_engine.h"
+#include "market_data_publisher.h"
+#include "order_server.h"
+#include "performance_dashboard.h"
+#include "latency_tracker.h"
 
 /// Main components, made global to be accessible from the signal handler.
 Common::Logger *logger = nullptr;
@@ -35,6 +35,8 @@ int main(int, char **) {
 
   std::signal(SIGINT, signal_handler);
 
+  std::string time_str;
+  
   // Initialize nanosecond performance monitoring
   Common::NanosecondTimer::calibrate();
   Common::g_performance_dashboard.start();
@@ -45,8 +47,6 @@ int main(int, char **) {
   Exchange::ClientRequestLFQueue client_requests(ME_MAX_CLIENT_UPDATES);
   Exchange::ClientResponseLFQueue client_responses(ME_MAX_CLIENT_UPDATES);
   Exchange::MEMarketUpdateLFQueue market_updates(ME_MAX_MARKET_UPDATES);
-
-  std::string time_str;
 
   logger->log("%:% %() % Starting Nanosecond-Precision Matching Engine...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   matching_engine = new Exchange::MatchingEngine(&client_requests, &client_responses, &market_updates);

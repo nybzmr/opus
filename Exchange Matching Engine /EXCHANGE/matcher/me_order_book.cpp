@@ -1,8 +1,8 @@
 #include "me_order_book.h"
-#include "common/nanosecond_timer.h"
-#include "common/latency_tracker.h"
+#include "nanosecond_timer.h"
+#include "latency_tracker.h"
 
-#include "matcher/matching_engine.h"
+#include "matching_engine.h"
 
 namespace Exchange {
   MEOrderBook::MEOrderBook(TickerId ticker_id, Logger *logger, MatchingEngine *matching_engine)

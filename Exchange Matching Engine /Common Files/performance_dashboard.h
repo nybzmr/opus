@@ -4,8 +4,10 @@
 #include <thread>
 #include <chrono>
 #include <string>
+#include <iostream>
 #include "latency_tracker.h"
 #include "nanosecond_timer.h"
+#include "macros.h"
 
 namespace Common {
   /// Real-time performance monitoring dashboard
@@ -70,31 +72,25 @@ namespace Common {
       // Implementation depends on your trade tracking mechanism
     }
     
-    /// Get current metrics
-    PerformanceMetrics get_metrics() const noexcept {
-      PerformanceMetrics result;
-      result.orders_per_second_ = metrics_.orders_per_second_.load(std::memory_order_relaxed);
-      result.trades_per_second_ = metrics_.trades_per_second_.load(std::memory_order_relaxed);
-      result.avg_latency_ns_ = metrics_.avg_latency_ns_.load(std::memory_order_relaxed);
-      result.p99_latency_ns_ = metrics_.p99_latency_ns_.load(std::memory_order_relaxed);
-      result.p99_9_latency_ns_ = metrics_.p99_9_latency_ns_.load(std::memory_order_relaxed);
-      result.memory_usage_bytes_ = metrics_.memory_usage_bytes_.load(std::memory_order_relaxed);
-      result.cpu_usage_percent_ = metrics_.cpu_usage_percent_.load(std::memory_order_relaxed);
-      return result;
+    /// Get current metrics values
+    uint64_t get_orders_per_second() const noexcept {
+      return metrics_.orders_per_second_.load(std::memory_order_relaxed);
+    }
+    
+    uint64_t get_avg_latency_ns() const noexcept {
+      return metrics_.avg_latency_ns_.load(std::memory_order_relaxed);
+    }
+    
+    uint64_t get_p99_latency_ns() const noexcept {
+      return metrics_.p99_latency_ns_.load(std::memory_order_relaxed);
     }
     
     /// Get performance summary as string
     std::string get_performance_summary() const {
-      auto m = get_metrics();
-      
       std::string summary = "=== NANOSECOND HFT PERFORMANCE DASHBOARD ===\n";
-      summary += "Orders/sec: " + std::to_string(m.orders_per_second_) + "\n";
-      summary += "Trades/sec: " + std::to_string(m.trades_per_second_) + "\n";
-      summary += "Avg Latency: " + std::to_string(m.avg_latency_ns_) + " ns\n";
-      summary += "P99 Latency: " + std::to_string(m.p99_latency_ns_) + " ns\n";
-      summary += "P99.9 Latency: " + std::to_string(m.p99_9_latency_ns_) + " ns\n";
-      summary += "Memory Usage: " + std::to_string(m.memory_usage_bytes_ / 1024 / 1024) + " MB\n";
-      summary += "CPU Usage: " + std::to_string(m.cpu_usage_percent_) + "%\n";
+      summary += "Orders/sec: " + std::to_string(get_orders_per_second()) + "\n";
+      summary += "Avg Latency: " + std::to_string(get_avg_latency_ns()) + " ns\n";
+      summary += "P99 Latency: " + std::to_string(get_p99_latency_ns()) + " ns\n";
       summary += "Latency Stats: " + g_latency_tracker.get_stats_string() + "\n";
       summary += "===============================================\n";
       

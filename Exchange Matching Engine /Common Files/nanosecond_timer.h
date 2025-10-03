@@ -3,6 +3,7 @@
 #include <chrono>
 #include <atomic>
 #include <thread>
+#include "macros.h"
 
 namespace Common {
   /// Nanosecond precision timer using TSC (Time Stamp Counter) for maximum performance
@@ -12,24 +13,15 @@ namespace Common {
     static std::atomic<bool> calibrated_;
     
   public:
-    /// Get current nanosecond timestamp using TSC
+    /// Get current nanosecond timestamp using high-resolution clock
     static inline uint64_t now_ns() noexcept {
-      if (UNLIKELY(!calibrated_.load(std::memory_order_acquire))) {
-        calibrate();
-      }
-      
-      unsigned int lo, hi;
-      __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-      uint64_t tsc = ((uint64_t) hi << 32) | lo;
-      
-      return static_cast<uint64_t>(tsc / tsc_frequency_ns_.load(std::memory_order_relaxed));
+      return std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
     
-    /// Get current TSC cycles for high-precision timing
+    /// Get current TSC cycles for high-precision timing (fallback to nanoseconds on Mac)
     static inline uint64_t rdtsc() noexcept {
-      unsigned int lo, hi;
-      __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-      return ((uint64_t) hi << 32) | lo;
+      return now_ns();
     }
     
     /// Convert TSC cycles to nanoseconds
@@ -72,10 +64,6 @@ namespace Common {
       calibrate();
     }
   };
-  
-  // Static member definitions
-  std::atomic<double> NanosecondTimer::tsc_frequency_ns_{0.0};
-  std::atomic<bool> NanosecondTimer::calibrated_{false};
 }
 
 /// High-performance latency measurement macros

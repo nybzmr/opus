@@ -22,7 +22,7 @@ CMAKE_AR:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_BUILD_TYPE:STRING=
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -31,7 +31,7 @@ CMAKE_COLOR_MAKEFILE:BOOL=ON
 CMAKE_CXX_COMPILER:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/c++
 
 //Flags used by the CXX compiler during all build types.
-CMAKE_CXX_FLAGS:STRING=-O3 -march=native -mtune=native -flto -DNDEBUG
+CMAKE_CXX_FLAGS:STRING=
 
 //Flags used by the CXX compiler during DEBUG builds.
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
@@ -49,7 +49,7 @@ CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 CMAKE_C_COMPILER:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/cc
 
 //Flags used by the C compiler during all build types.
-CMAKE_C_FLAGS:STRING=-O3 -march=native -mtune=native -flto -DNDEBUG
+CMAKE_C_FLAGS:STRING=
 
 //Flags used by the C compiler during DEBUG builds.
 CMAKE_C_FLAGS_DEBUG:STRING=-g
@@ -67,7 +67,7 @@ CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 CMAKE_DLLTOOL:FILEPATH=/opt/homebrew/opt/binutils/bin/dlltool
 
 //Flags used by the linker during all build types.
-CMAKE_EXE_LINKER_FLAGS:STRING=-flto
+CMAKE_EXE_LINKER_FLAGS:STRING=-L/opt/homebrew/opt/binutils/lib
 
 //Flags used by the linker during DEBUG builds.
 CMAKE_EXE_LINKER_FLAGS_DEBUG:STRING=
@@ -146,7 +146,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=HFT_Developer_Codes
+CMAKE_PROJECT_NAME:STATIC=NanosecondHFT
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/ranlib
@@ -214,13 +214,13 @@ CMAKE_TAPI:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/tapi
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //Value Computed by CMake
-HFT_Developer_Codes_BINARY_DIR:STATIC=/Users/ranjanshahajishitole/Desktop/GIthub/Live-High-Frequency-Trading-Exchange-Engine/cmake-build-release
+NanosecondHFT_BINARY_DIR:STATIC=/Users/ranjanshahajishitole/Desktop/GIthub/Live-High-Frequency-Trading-Exchange-Engine/cmake-build-release
 
 //Value Computed by CMake
-HFT_Developer_Codes_IS_TOP_LEVEL:STATIC=ON
+NanosecondHFT_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-HFT_Developer_Codes_SOURCE_DIR:STATIC=/Users/ranjanshahajishitole/Desktop/GIthub/Live-High-Frequency-Trading-Exchange-Engine
+NanosecondHFT_SOURCE_DIR:STATIC=/Users/ranjanshahajishitole/Desktop/GIthub/Live-High-Frequency-Trading-Exchange-Engine
 
 
 ########################

@@ -3,12 +3,12 @@
 #include <functional>
 #include <map>
 
-#include "common/thread_utils.h"
-#include "common/lf_queue.h"
-#include "common/macros.h"
-#include "common/mcast_socket.h"
+#include "thread_utils.h"
+#include "lf_queue.h"
+#include "macros.h"
+#include "mcast_socket.h"
 
-#include "exchange/market_data/market_update.h"
+#include "market_data/market_update.h"
 
 namespace Trading {
   class MarketDataConsumer {

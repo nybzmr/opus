@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/macros.h"
-#include "common/logging.h"
+#include "macros.h"
+#include "logging.h"
 
 #include "position_keeper.h"
 #include "om_order.h"

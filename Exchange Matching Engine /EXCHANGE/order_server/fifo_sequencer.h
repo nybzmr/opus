@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/thread_utils.h"
-#include "common/macros.h"
+#include "thread_utils.h"
+#include "macros.h"
 
 #include "order_server/client_request.h"
 

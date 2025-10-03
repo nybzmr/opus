@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <thread>
 
 #include "macros.h"
 
@@ -10,10 +11,12 @@ namespace Common {
   template<typename T>
   class MemPool final {
   public:
-    explicit MemPool(std::size_t num_elems) :
-        store_(num_elems, {T(), true}) /* pre-allocation of vector storage. */ {
-      ASSERT(reinterpret_cast<const ObjectBlock *>(&(store_[0].object_)) == &(store_[0]), "T object should be first member of ObjectBlock.");
+    explicit MemPool(std::size_t num_elems) : store_(num_elems) {
       ASSERT((num_elems & (num_elems - 1)) == 0, "MemPool size must be power of 2");
+      // Initialize each block separately
+      for(auto& block : store_) {
+        block.is_free_.store(true, std::memory_order_relaxed);
+      }
     }
 
     /// Allocate a new object of type T, use placement new to initialize the object, mark the block as in-use and return the object.

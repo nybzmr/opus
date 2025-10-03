@@ -44,7 +44,7 @@ namespace Common {
     
     /// Record a latency measurement in nanoseconds
     void record_latency(uint64_t latency_ns) noexcept {
-      auto bucket = std::min(latency_ns / 1000, NUM_BUCKETS - 1);
+      auto bucket = std::min(latency_ns / 1000, static_cast<uint64_t>(NUM_BUCKETS - 1));
       buckets_[bucket].record_latency(latency_ns);
       
       total_operations_.fetch_add(1, std::memory_order_relaxed);

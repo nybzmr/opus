@@ -1,4 +1,5 @@
 #include "performance_dashboard.h"
+#include <iostream>
 
 namespace Common {
   /// Global performance dashboard instance
