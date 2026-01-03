@@ -1,4 +1,4 @@
-# Nanosecond High-Frequency Trading Exchange Engine
+# OPUS: Nanosecond High-Frequency Trading Exchange Engine
 
 Production-grade C++ trading system processing with 89ns latency.
 
